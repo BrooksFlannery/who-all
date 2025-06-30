@@ -1,12 +1,13 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState, type ReactElement } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import type { ChatData, MsgData } from '~/lib/definitions/types';
 import { clientBotAPI } from '~/lib/api';
+import Link from 'next/link';
 
 export default function Chat() {
-    const api = new clientBotAPI();
+    const api = useMemo(() => new clientBotAPI(), []);
 
     const { id: chatId } = useParams();
     const [thinking, setThinking] = useState<boolean>(false);
@@ -17,11 +18,11 @@ export default function Chat() {
     const [messages, setMsgs] = useState<MsgData[]>([]);
 
     useEffect(() => {
-        if (!chatId || typeof chatId !== "string") return; // redirect here would be good
+        if (!chatId || typeof chatId !== "string") return;
 
-        api.getChat(chatId).then(setChat)
-        api.getMsgs(chatId).then(setMsgs); // also maybe this is a good spot for the no waterfall thing?
-    }, [chatId]);
+        void api.getChat(chatId).then(setChat);
+        void api.getMsgs(chatId).then(setMsgs);
+    }, [chatId, api]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -63,46 +64,86 @@ export default function Chat() {
     }
 
     return (
-        <div className='chat-container'>
-
-            {!chat &&
-                <div>Loading Chat Info...</div>}
-            {chat &&
-                <div>{JSON.stringify(chat.chatName)}</div>}
-
-            {!messages &&
-                <div>Loading Messages...</div>}
-            {messages?.map((message, i) => {
-                return (
-                    <div
-                        key={i}
-                        className={`message ${message.role === 'user' ? 'user' : 'bot'}`}
-                    >
-                        {message.role === 'user' ? '' : 'AI: '}
-                        {message.content}
-                        {message.role === 'user' ? ': User' : ''}
+        <div className="min-h-screen bg-gray-50">
+            {/* Header */}
+            <div className="bg-white border-b px-4 py-3">
+                <div className="max-w-4xl mx-auto flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <Link
+                            href="/"
+                            className="text-blue-500 hover:text-blue-600 transition-colors"
+                        >
+                            ← Back to Home
+                        </Link>
+                        <h1 className="text-lg font-semibold">
+                            {chat ? chat.chatName : 'Loading...'}
+                        </h1>
                     </div>
-                );
-            })}
-
-            {thinking && (
-                <div className="whitespace-pre-wrap">
-                    AI: <span className="animate-pulse">Thinking...</span>
+                    <Link
+                        href="/chat/new"
+                        className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors"
+                    >
+                        New Chat
+                    </Link>
                 </div>
-            )}
+            </div>
 
-            <form className="input-form" onSubmit={handleSubmit}>
-                <input
-                    value={input}
-                    placeholder="Say something..."
-                    onChange={(e) => { setInput(e.target.value) }}
-                    disabled={responding}
-                    autoFocus
-                />
-                <button type="submit" disabled={responding || !chat || !input.trim()}>
-                    Send
-                </button>
-            </form>
+            {/* Chat Container */}
+            <div className="max-w-4xl mx-auto px-4 py-6">
+                <div className="bg-white rounded-lg shadow-sm border min-h-[600px] flex flex-col">
+                    {/* Messages */}
+                    <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+                        {!messages && (
+                            <div className="text-center text-gray-500">Loading messages...</div>
+                        )}
+
+                        {messages?.map((message, i) => (
+                            <div
+                                key={i}
+                                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                            >
+                                <div
+                                    className={`max-w-[70%] px-4 py-2 rounded-lg ${message.role === 'user'
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-gray-100 text-gray-800'
+                                        }`}
+                                >
+                                    {message.content}
+                                </div>
+                            </div>
+                        ))}
+
+                        {thinking && (
+                            <div className="flex justify-start">
+                                <div className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg">
+                                    <span className="animate-pulse">AI is thinking...</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Input Form */}
+                    <div className="border-t p-4">
+                        <form onSubmit={handleSubmit} className="flex gap-2">
+                            <input
+                                value={input}
+                                placeholder="Type your message..."
+                                onChange={(e) => { setInput(e.target.value) }}
+                                disabled={responding}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                autoFocus
+                            />
+                            <button
+                                type="submit"
+                                disabled={responding || !chat || !input.trim()}
+                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                Send
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

@@ -55,8 +55,8 @@ export async function POST(
         let result;
         try {
             result = streamText({
-                model: openai('gpt-4-turbo'),
-                system: "You are a helpful assistant, but the longer the conversation goes, the more rude you become.",
+                model: openai('gpt-4o-mini'),
+                system: "You are a helpful assistant",
                 messages: mappedMsgs,
             });
         } catch (err) {
