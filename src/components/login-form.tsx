@@ -32,10 +32,8 @@ const formSchema = z.object({
 import { signIn } from "~/server/server"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
-import { useSidebar } from "./ui/sidebar"
 
 export function LoginForm(props: React.ComponentProps<"div">) {
-  const { setOpen } = useSidebar();
   const [isLoading, setIsLoading] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,7 +48,6 @@ export function LoginForm(props: React.ComponentProps<"div">) {
       provider: "google",
       callbackURL: "/"
     })
-    setOpen(true)
   }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -58,7 +55,6 @@ export function LoginForm(props: React.ComponentProps<"div">) {
     const { success, message } = await signIn(values.email, values.password)
     if (success) {
       toast.success(message);
-      setOpen(true);
       redirect('/')
     } else {
       toast.error(message);

@@ -44,7 +44,7 @@ export function SignupForm(props: React.ComponentProps<"div">) {
         const { success, message } = await signUp(values.email, values.password, values.name)
         if (success) {
             toast.success(message);
-            redirect('/dashboard')
+            redirect('/')
         } else {
             toast.error(message);
         }
@@ -122,7 +122,7 @@ export function SignupForm(props: React.ComponentProps<"div">) {
                                 >
                                     {isLoading
                                         ? (<Loader2 className="size-4 animate-spin" />)
-                                        : ("Login")}
+                                        : ("Sign Up")}
                                 </Button>
                                 <Button variant="outline" className="w-full">
                                     Sign up with Google
